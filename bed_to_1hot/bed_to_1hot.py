@@ -51,6 +51,7 @@ def read_bed_file(path, labelnum=0):
     bed_df = pd.read_table(path, sep="\t", header=None)
     colnames = generate_colnames(bed_df, labelnum)
     bed_df.columns = colnames
+    print(bed_df.head())
     return bed_df
 
 
@@ -97,12 +98,15 @@ def one_hot_encoding(sequence):
         "n": np.asarray([0, 0, 0, 0]),
         "-": np.asarray([0, 0, 0, 0]),
     }
-
-    nuc_list = list()
-    for nuc in list(sequence):
-        nuc_list.append(mydict[nuc])
-    result = np.stack(np.asarray(nuc_list, dtype="int8"))
-    return result
+    print(f"Seq: {sequence}")
+    if len(sequence) > 0:
+        nuc_list = list()
+        for nuc in list(sequence):
+            nuc_list.append(mydict[nuc])
+        result = np.stack(np.asarray(nuc_list, dtype="int8"))
+        return result
+    else: 
+        print("ERROR! sequence is too short")
 
 
 def bed_encoding(bed_df, reference):
@@ -119,7 +123,8 @@ def bed_encoding(bed_df, reference):
     fasta = Fasta(reference, as_raw=True)
     seq_list = list()
     for _, i in bed_df.iterrows():
-        seq_list.append(one_hot_encoding(fasta[i[0]][i[1] : i[2]]))
+        print(f"region:{i[0]}:{i[1]}-{i[2]}")
+        seq_list.append(one_hot_encoding(fasta[i[0]][i[1]:i[2]]))
     result = np.stack(seq_list)
     return result
 
@@ -173,6 +178,7 @@ def bed_to_1hot(input_file, output_file, reference, label_num, v_holdout, t_hold
     """Takes a bedfile, queries a fasta file and saves the one hot encoded sequences to hd5."""
     bed_df = read_bed_file(input_file, label_num)
     # print("generating data split")
+    print(bed_df.head())
     x_train, y_train, x_val, y_val, x_test, y_test = train_validate_test_split(
         bed_df=bed_df, ref=reference, v_holdout=v_holdout, t_holdout=t_holdout
     )

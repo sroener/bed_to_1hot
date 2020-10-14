@@ -10,7 +10,7 @@ with open('README.md') as readme_file:
 with open('CHANGELOG.md') as changelog_file:
     changelog = changelog_file.read()
 
-requirements = ['Click>=7.0', ]
+requirements = ['click>=7.0', 'numpy', 'pandas', 'pyfaidx', 'h5py']
 
 setup_requirements = ['pytest-runner', ]
 

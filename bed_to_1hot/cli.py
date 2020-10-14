@@ -54,13 +54,13 @@ def cli(bed_file, output_file, reference, label_num, v_holdout, t_holdout):
     t_holdout = t_holdout.split(",")
     v_holdout = v_holdout.split(",")
 
-    bed_to_1hot_hd5(
+    bed_to_1hot(
         input_file=bed_file,
         output_file=output_file,
         reference=reference,
         label_num=label_num,
         v_holdout=v_holdout,
-        t_holdout=t_holdout,
+        t_holdout=t_holdout
     )
     # print(type(bed_file))
     # print(bed_file, output_file, reference, label_num, v_holdout, t_holdout)
