@@ -41,18 +41,21 @@ from bed_to_1hot.bed_to_1hot import bed_to_1hot
 @click.option(
     "--v_holdout",
     type=click.STRING,
+    default=None,
     help="Holdout chromosomes for validation set. Expected format: chr1",
 )
 @click.option(
     "--t_holdout",
     type=click.STRING,
+    default=None,
     help="Holdout chromosomes for test set. Expected format: chr1 or chr1,chr2",
 )
 def cli(bed_file, output_file, reference, label_num, v_holdout, t_holdout):
     """Console script for bed_to_1hot_hd5."""
-
-    t_holdout = t_holdout.split(",")
-    v_holdout = v_holdout.split(",")
+    if t_holdout is not None:
+        t_holdout = t_holdout.split(",")
+    if v_holdout is not None:
+        v_holdout = v_holdout.split(",")
 
     bed_to_1hot(
         input_file=bed_file,

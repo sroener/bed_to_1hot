@@ -128,36 +128,57 @@ def bed_encoding(bed_df, reference):
     result = np.stack(seq_list)
     return result
 
-
 def train_validate_test_split(bed_df, v_holdout, t_holdout, ref):
-    """[summary]
-
-    Args:
-        bed_df ([type]): [Dataframe of bed file]
-        v_holdout ([type]): [Holdout chromosomes for validation]
-        t_holdout ([type]): [Holdout chromosomes for testing]
-        ref ([type]): [Genome reference file in fasta format]
-
-    Returns:
-        [numpy arrays]: [train, validate, test data with data(x) and label(y) for each subset]
-    """
-    train_df = bed_df.loc[~bed_df["chrom"].isin(t_holdout + v_holdout)]
-    validate_df = bed_df.loc[bed_df["chrom"].isin(v_holdout)]
-    test_df = bed_df.loc[bed_df["chrom"].isin(t_holdout)]
-    x_train = bed_encoding(train_df, ref)
-    y_train = np.asarray(
-        train_df.loc[:, train_df.columns.str.contains("label")], dtype="int8"
-    )  # .flatten()
-    x_val = bed_encoding(validate_df, ref)
-    y_val = np.asarray(
-        validate_df.loc[:, validate_df.columns.str.contains("label")], dtype="int8"
-    )  # .flatten()
-    x_test = bed_encoding(test_df, ref)
-    y_test = np.asarray(
-        test_df.loc[:, test_df.columns.str.contains("label")], dtype="int8"
-    )  # .flatten()
+    x_train = y_train = x_val = y_val = x_test = y_test = None
+    
+    if t_holdout is not None and v_holdout is not None:
+        train_df = bed_df.loc[~bed_df["chrom"].isin(t_holdout + v_holdout)]
+        validate_df = bed_df.loc[bed_df["chrom"].isin(v_holdout)]
+        test_df = bed_df.loc[bed_df["chrom"].isin(t_holdout)]
+        x_train = bed_encoding(train_df, ref)
+        y_train = np.asarray(
+            train_df.loc[:, train_df.columns.str.contains("label")], dtype="int8"
+        )  # .flatten()
+        x_val = bed_encoding(validate_df, ref)
+        y_val = np.asarray(
+            validate_df.loc[:, validate_df.columns.str.contains("label")], dtype="int8"
+        )  # .flatten()
+        x_test = bed_encoding(test_df, ref)
+        y_test = np.asarray(
+            test_df.loc[:, test_df.columns.str.contains("label")], dtype="int8"
+        ) 
+        
+    elif t_holdout is not None:
+        train_df = bed_df.loc[~bed_df["chrom"].isin(t_holdout)]
+        test_df = bed_df.loc[bed_df["chrom"].isin(t_holdout)]
+        x_train = bed_encoding(train_df, ref)
+        y_train = np.asarray(
+            train_df.loc[:, train_df.columns.str.contains("label")], dtype="int8"
+        )  # .flatten()
+        x_test = bed_encoding(test_df, ref)
+        y_test = np.asarray(
+            test_df.loc[:, test_df.columns.str.contains("label")], dtype="int8"
+        )  # .flatten()
+    elif v_holdout is not None:
+        train_df = bed_df.loc[~bed_df["chrom"].isin(v_holdout)]
+        validate_df = bed_df.loc[bed_df["chrom"].isin(v_holdout)]
+        x_train = bed_encoding(train_df, ref)
+        y_train = np.asarray(
+            train_df.loc[:, train_df.columns.str.contains("label")], dtype="int8"
+        )  # .flatten()
+        x_val = bed_encoding(validate_df, ref)
+        y_val = np.asarray(
+            validate_df.loc[:, validate_df.columns.str.contains("label")], dtype="int8"
+        )  # .flatten()
+    else:
+        train_df = bed_df
+        x_train = bed_encoding(train_df, ref)
+        y_train = np.asarray(
+            train_df.loc[:, train_df.columns.str.contains("label")], dtype="int8"
+        )  # .flatten()
+    
+    
     return x_train, y_train, x_val, y_val, x_test, y_test
-
 
 def save_to_hd5(out_file, x_train, y_train, x_val, y_val, x_test, y_test):
     """Writes train,validate,test arrays to HD5 format"""
@@ -165,14 +186,15 @@ def save_to_hd5(out_file, x_train, y_train, x_val, y_val, x_test, y_test):
     train_data = data.create_group("train_data")
     train_data.create_dataset("x_train", data=x_train)
     train_data.create_dataset("y_train", data=y_train)
-    val_data = data.create_group("val_data")
-    val_data.create_dataset("x_val", data=x_val)
-    val_data.create_dataset("y_val", data=y_val)
-    test_data = data.create_group("test_data")
-    test_data.create_dataset("x_test", data=x_test)
-    test_data.create_dataset("y_test", data=y_test)
+    if x_val is not None:
+        val_data = data.create_group("val_data")
+        val_data.create_dataset("x_val", data=x_val)
+        val_data.create_dataset("y_val", data=y_val)
+    if x_test is not None:
+        test_data = data.create_group("test_data")
+        test_data.create_dataset("x_test", data=x_test)
+        test_data.create_dataset("y_test", data=y_test)
     data.close()
-
 
 def bed_to_1hot(input_file, output_file, reference, label_num, v_holdout, t_holdout):
     """Takes a bedfile, queries a fasta file and saves the one hot encoded sequences to hd5."""
